@@ -1,0 +1,32 @@
+{
+  "name": "electron-ts-app",
+  "version": "1.0.0",
+  "description": "Minimal Electron + TypeScript app",
+  "main": "dist/main.js",
+  "scripts": {
+    "copy:assets": "cpx \"src/renderer/*.html\" dist/renderer",
+    "build:main": "tsc -p tsconfig.json",
+    "build:renderer": "vite build",
+    "build": "npm run build:renderer && npm run build:main",
+    "start": "npm run build && electron .",
+    "dev": "concurrently \"vite\" \"tsc -w\" \"electron .\""
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "concurrently": "^8.2.0",
+    "cpx": "^1.5.0",
+    "electron": "^32.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^7.2.2"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sqlite3": "^5.1.7"
+  }
+}
