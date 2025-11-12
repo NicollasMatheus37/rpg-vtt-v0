@@ -33,32 +33,26 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const electron_1 = require("electron");
-const path = __importStar(require("path"));
-function createWindow() {
-    const window = new electron_1.BrowserWindow({
-        width: 1200,
-        height: 900,
-        webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-            contextIsolation: true,
-            nodeIntegration: false
+exports.CreateEnemyForm = CreateEnemyForm;
+const react_1 = __importStar(require("react"));
+function CreateEnemyForm() {
+    // use hook 'useReducer' to manage form state
+    const [formState, dispatch] = (0, react_1.useReducer)((state, action) => {
+        switch (action.type) {
+            case 'SET_FIELD':
+                return {
+                    ...state,
+                    [action.field]: action.value
+                };
+            case 'RESET':
+                return {};
+            default:
+                return state;
         }
-    });
-    if (!electron_1.app.isPackaged) {
-        window.loadURL("http://localhost:5173");
-    }
-    else {
-        window.loadFile(path.join(__dirname, "renderer", "index.html"));
-    }
+    }, {});
+    return (react_1.default.createElement("form", { className: 'space-y-4 p-4' },
+        react_1.default.createElement("span", { className: "text-3xl font-bold mb-4" }, "Create Enemy"),
+        react_1.default.createElement("fieldset", { className: "fieldset" },
+            react_1.default.createElement("legend", { className: "fieldset-legend" }, "Page title"),
+            react_1.default.createElement("input", { type: "text", className: "input", placeholder: "My awesome page" }))));
 }
-// listeners
-electron_1.app.whenReady().then(createWindow);
-electron_1.app.on("window-all-closed", () => {
-    if (process.platform !== "darwin")
-        electron_1.app.quit();
-});
-electron_1.app.on("activate", () => {
-    if (electron_1.BrowserWindow.getAllWindows().length === 0)
-        createWindow();
-});

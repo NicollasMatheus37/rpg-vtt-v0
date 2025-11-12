@@ -5,11 +5,7 @@ export default function App() {
 	// @ts-ignore
 	const msg = window.electronAPI?.ping?.() ?? "no preload bridge";
 	return (
-		<div style={{ padding: 24, fontFamily: "sans-serif" }}>
-			<h1>⚛️ Electron + React + TypeScript</h1>
-			<p>
-				Hello from React! preload says: <b>{msg}</b>
-			</p>
+		<div style={{ padding: 16, fontFamily: "monospace" }}>
 			<Map />
 		</div>
 	);

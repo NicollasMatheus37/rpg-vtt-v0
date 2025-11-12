@@ -33,32 +33,23 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const electron_1 = require("electron");
-const path = __importStar(require("path"));
-function createWindow() {
-    const window = new electron_1.BrowserWindow({
-        width: 1200,
-        height: 900,
-        webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-            contextIsolation: true,
-            nodeIntegration: false
+exports.CreateEnemyModal = CreateEnemyModal;
+const react_1 = __importStar(require("react"));
+function CreateEnemyModal({ isOpen }) {
+    (0, react_1.useEffect)(() => {
+        console.log('isOpen', isOpen);
+        if (isOpen) {
+            alert('open modal');
+            document.getElementById('createEnemyModal').showModal();
         }
-    });
-    if (!electron_1.app.isPackaged) {
-        window.loadURL("http://localhost:5173");
-    }
-    else {
-        window.loadFile(path.join(__dirname, "renderer", "index.html"));
-    }
+        else {
+            document.getElementById('createEnemyModal').close();
+        }
+    }, [isOpen]);
+    return (react_1.default.createElement("dialog", { id: "createEnemyModal", className: "modal" },
+        react_1.default.createElement("div", { className: "modal-box" },
+            react_1.default.createElement("h3", { className: "font-bold text-lg" }, "Hello!"),
+            react_1.default.createElement("p", { className: "py-4" }, "Press ESC key or click outside to close")),
+        react_1.default.createElement("form", { method: "dialog", className: "modal-backdrop" },
+            react_1.default.createElement("button", null, "close"))));
 }
-// listeners
-electron_1.app.whenReady().then(createWindow);
-electron_1.app.on("window-all-closed", () => {
-    if (process.platform !== "darwin")
-        electron_1.app.quit();
-});
-electron_1.app.on("activate", () => {
-    if (electron_1.BrowserWindow.getAllWindows().length === 0)
-        createWindow();
-});
