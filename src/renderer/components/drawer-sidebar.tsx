@@ -1,14 +1,14 @@
 import React from 'react';
 
-export function DrawerSidebar({ label, children, key }: {
+export function DrawerSidebar({ label, children, id }: {
 	label?: string,
 	children?: React.ReactNode,
-	key: string,
+	id: string,
 }) {
-	const drawerId = key || 'sidebarDrawer';
+	const drawerId = id || 'sidebarDrawer';
 
 	return (
-		<div className="drawer" key={key}>
+		<div className="drawer" key={id}>
 			<input id={drawerId} type="checkbox" className="drawer-toggle"/>
 			<div className="drawer-content">
 				{/* Page content here */}

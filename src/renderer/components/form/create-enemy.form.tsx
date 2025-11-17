@@ -1,13 +1,15 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useContext, useEffect, useReducer } from 'react';
 import { characterSizeOptions } from '../../../enums/character-size.enum';
 import { characterRangeOptions } from '../../../enums/character-range.enum';
 import { characterTypeOptions } from '../../../enums/character-type.enum';
 import { EnemyDto } from '../../../dtos/enemy.dto';
-import { useStorage } from '../../../hooks/use-storage';
+import { EntitiesContext } from '../../../contexts/entities.context';
 
 type Action = { type: 'SET_FIELD', field: keyof EnemyDto, value: any } | { type: 'RESET' };
 
 export function CreateEnemyForm() {
+	const entitiesContext = useContext(EntitiesContext);
+
 	const [formState, dispatch] = useReducer((state: EnemyDto, action: Action) => {
 		switch (action.type) {
 			case 'SET_FIELD':
@@ -21,8 +23,6 @@ export function CreateEnemyForm() {
 				return state;
 		}
 	}, {});
-
-	const storage = useStorage<EnemyDto>({ groupKey: 'enemies' });
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -38,7 +38,7 @@ export function CreateEnemyForm() {
 		e.preventDefault();
 
 		const enemy = new EnemyDto().create(formState);
-		storage.set(enemy.id.toString(), enemy);
+		entitiesContext.addEnemy(enemy);
 
 		dispatch({ type: 'RESET' });
 	}

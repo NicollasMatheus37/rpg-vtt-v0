@@ -14,4 +14,8 @@ const characterSizeOptions = [
 	{ label: 'Colossal', value: CharacterSizeEnum.COLOSSAL, gridSize: 9 },
 ];
 
-export { characterSizeOptions };
+const getCharacterSizeOption = (size: CharacterSizeEnum) => {
+	return characterSizeOptions.find(option => option.value === size);
+}
+
+export { characterSizeOptions, getCharacterSizeOption };

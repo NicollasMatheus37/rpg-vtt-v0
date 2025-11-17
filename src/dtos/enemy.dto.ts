@@ -5,8 +5,6 @@ export class EnemyDto extends CharacterDto {
 	public create(data: Partial<EnemyDto>): EnemyDto {
 		const enemy = new EnemyDto();
 
-		console.log(data);
-
 		enemy.id = uuid();
 		enemy.name = data.name;
 		enemy.currentHp = data.hp;

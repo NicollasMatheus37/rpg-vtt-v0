@@ -1,14 +1,16 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useContext, useEffect, useReducer } from 'react';
 import { characterSizeOptions } from '../../../enums/character-size.enum';
 import { characterRangeOptions } from '../../../enums/character-range.enum';
 import { characterTypeOptions } from '../../../enums/character-type.enum';
 import { EnemyDto } from '../../../dtos/enemy.dto';
-import { useStorage } from '../../../hooks/use-storage';
 import { PlayerDto } from '../../../dtos/player.dto';
+import { EntitiesContext } from '../../../contexts/entities.context';
 
 type Action = { type: 'SET_FIELD', field: keyof PlayerDto, value: any } | { type: 'RESET' };
 
 export function CreatePlayerForm() {
+	const entitiesContext = useContext(EntitiesContext);
+
 	const [formState, dispatch] = useReducer((state: PlayerDto, action: Action) => {
 		switch (action.type) {
 			case 'SET_FIELD':
@@ -23,8 +25,6 @@ export function CreatePlayerForm() {
 		}
 	}, {});
 
-	const storage = useStorage<EnemyDto>({ groupKey: 'players' });
-
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		dispatch({ type: 'SET_FIELD', field: name as keyof PlayerDto, value });
@@ -38,8 +38,8 @@ export function CreatePlayerForm() {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		const enemy = new PlayerDto().create(formState);
-		storage.set(enemy.id.toString(), enemy);
+		const player = new PlayerDto().create(formState);
+		entitiesContext.addPlayer(player);
 
 		dispatch({ type: 'RESET' });
 	}

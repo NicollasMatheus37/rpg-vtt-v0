@@ -1,11 +1,12 @@
 import React from 'react';
+import { EntitiesContext, TEntity } from '../../contexts/entities.context';
 
-export function Grid({ tileSize, gridW, gridH, entities }: {
+export function Grid({ tileSize, gridW, gridH }: {
 	tileSize: number,
 	gridW: number,
 	gridH: number,
-	entities?: TEntity[]
 }) {
+	const entitiesContext = React.useContext(EntitiesContext);
 
 	const tile = (
 		<div
@@ -29,15 +30,19 @@ export function Grid({ tileSize, gridW, gridH, entities }: {
 	);
 
 	// se houver entidades, renderizá-las na grade
-	const entityElements = entities?.map((entity, index) => {
-		const entitySize = entity.size * tileSize;
+	const entities = entitiesContext.entities;
+	const entityElements = entities?.map((entity: TEntity, index: number) => {
+		if (!entity.position) return null;
+
+		const entitySize = entity.size;
+
 		return (
 			<div
 				key={index}
 				style={{
 					position: 'absolute',
-					top: entity.position.y * tileSize,
-					left: entity.position.x * tileSize,
+					top: entity.position?.y * tileSize,
+					left: entity.position?.x * tileSize,
 					width: entitySize,
 					height: entitySize,
 					backgroundColor: 'rgba(255, 0, 0, 0.5)',
