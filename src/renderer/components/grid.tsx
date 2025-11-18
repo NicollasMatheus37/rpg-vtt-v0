@@ -1,73 +1,126 @@
 import React from 'react';
 import { EntitiesContext, TEntity } from '../../contexts/entities.context';
+import { EntityContextMenu } from './entity-context-menu';
+import { Tile } from './tile';
 
-export function Grid({ tileSize, gridW, gridH }: {
+export function Grid({ 
+	tileSize, 
+	gridW, 
+	gridH,
+	selectedEntityIndex,
+	onEntitySelect,
+	contextMenu,
+	onContextMenu,
+}: {
 	tileSize: number,
 	gridW: number,
 	gridH: number,
+	selectedEntityIndex: number | null,
+	onEntitySelect: (index: number | null) => void,
+	contextMenu: { entityIndex: number; position: { x: number; y: number } } | null,
+	onContextMenu: (menu: { entityIndex: number; position: { x: number; y: number } } | null) => void,
 }) {
 	const entitiesContext = React.useContext(EntitiesContext);
 
-	const tile = (
-		<div
-			style={{
-				width: tileSize,
-				height: tileSize,
-				border: '1px solid black',
-				boxSizing: 'border-box',
-			}}
-		></div>
-	);
+	const handleTileClick = (x: number, y: number) => {
+		if (contextMenu) {
+			onContextMenu(null); // Close context menu
+			return;
+		}
+		if (selectedEntityIndex !== null) {
+			entitiesContext.moveEntity(selectedEntityIndex, { x, y });
+			onEntitySelect(null); // Deselect after moving
+		}
+	};
 
-	const row = (
+	const handleEntityClick = (e: React.MouseEvent, index: number) => {
+		e.stopPropagation(); // Prevent tile click when clicking entity
+		onEntitySelect(index === selectedEntityIndex ? null : index);
+	};
+
+	const handleEntityContextMenu = (e: React.MouseEvent, index: number) => {
+		e.preventDefault();
+		e.stopPropagation();
+		onContextMenu({
+			entityIndex: index,
+			position: { x: e.clientX, y: e.clientY },
+		});
+	};
+
+	const row = (y: number) => (
 		<div style={{ lineHeight: 0, whiteSpace: 'nowrap' }}>
 			{Array.from({ length: gridW }).map((_, x) => (
-				<div key={x} style={{ display: 'inline-block' }}>
-					{tile}
-				</div>
+				<Tile
+					key={x}
+					tileSize={tileSize}
+					x={x}
+					y={y}
+					isSelectable={selectedEntityIndex !== null}
+					onClick={handleTileClick}
+				/>
 			))}
 		</div>
 	);
 
-	// se houver entidades, renderizá-las na grade
 	const entities = entitiesContext.entities;
 	const entityElements = entities?.map((entity: TEntity, index: number) => {
 		if (!entity.position) return null;
 
 		const entitySize = entity.size;
+		const isSelected = index === selectedEntityIndex;
 
 		return (
 			<div
 				key={index}
+				onClick={(e) => handleEntityClick(e, index)}
+				onContextMenu={(e) => handleEntityContextMenu(e, index)}
+				className={`absolute box-border cursor-pointer ${isSelected ? 'z-10' : 'z-[5]'}`}
 				style={{
-					position: 'absolute',
 					top: entity.position?.y * tileSize,
 					left: entity.position?.x * tileSize,
 					width: entitySize,
 					height: entitySize,
-					backgroundColor: 'rgba(255, 0, 0, 0.5)',
-					border: '2px solid red',
-					boxSizing: 'border-box',
+					backgroundColor: entity.color,
+					border: isSelected ? '3px solid yellow' : `2px solid ${entity.borderColor}`,
 				}}
-			></div>
+			>
+				<div className={'text-xs'} style={{ color: entity.textColor }}>
+					<p className='font-bold text-lg'>{entity.character.name}</p>
+					<p>{entity.character.hp} / {entity.character.currentHp}</p>
+					<p><span className="font-bold">Armor</span>: {entity.character.armor}</p>
+				</div>
+			</div>
 		);
 	});
 
-	// criar a grade com as linhas e adicionar as entidades se houver
 	const grid = (
 		<div style={{ position: 'relative', width: gridW * tileSize, height: gridH * tileSize }}>
 			{Array.from({ length: gridH }).map((_, y) => (
 				<div key={y}>
-					{row}
+					{row(y)}
 				</div>
 			))}
 			{entityElements}
 		</div>
 	);
 
+	const contextMenuEntity = contextMenu 
+		? entitiesContext.entities[contextMenu.entityIndex]
+		: null;
+
 	return (
 		<div className={'w-full'}>
 			{grid}
+			{contextMenu && contextMenuEntity && (
+				<EntityContextMenu
+					entity={contextMenuEntity}
+					entityIndex={contextMenu.entityIndex}
+					position={contextMenu.position}
+					onClose={() => onContextMenu(null)}
+					onDelete={entitiesContext.deleteEntity}
+					onSelect={onEntitySelect}
+				/>
+			)}
 		</div>
 	);
 }

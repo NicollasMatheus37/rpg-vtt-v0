@@ -10,4 +10,8 @@ const characterRangeOptions = [
 	{ label: 'Longo', value: CharacterRangeEnum.HIGH, gridRange: 9 },
 ];
 
-export { characterRangeOptions };
+const getCharacterRangeOption = (range: CharacterRangeEnum) => {
+	return characterRangeOptions.find(option => option.value === range);
+}
+
+export { characterRangeOptions, getCharacterRangeOption };

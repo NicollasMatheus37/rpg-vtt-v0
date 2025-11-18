@@ -6,7 +6,9 @@ import { CharacterDto } from '../dtos/character.dto';
 type TEntity = {
 	position: { x: number; y: number };
 	size: number;
-	color: string;
+	color: string; // background color (rgba)
+	borderColor: string; // border color
+	textColor: string; // text color for contrast
 	character: CharacterDto;
 	type: typeof EnemyDto | typeof PlayerDto;
 };
@@ -15,12 +17,16 @@ type EntitiesContextType = {
 	entities: TEntity[];
 	addEnemy: (enemy: EnemyDto) => void;
 	addPlayer: (player: PlayerDto) => void;
+	moveEntity: (entityIndex: number, newPosition: { x: number; y: number }) => void;
+	deleteEntity: (entityIndex: number) => void;
 };
 
 const EntitiesContext = createContext<EntitiesContextType>({
 	entities: [],
 	addEnemy: () => {},
 	addPlayer: () => {},
+	moveEntity: () => {},
+	deleteEntity: () => {},
 });
 
 export { EntitiesContext, EntitiesContextType, TEntity };

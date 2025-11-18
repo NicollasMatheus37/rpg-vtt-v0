@@ -10,8 +10,8 @@ const characterSizeOptions = [
 	{ label: 'Pequeno', value: CharacterSizeEnum.SMALL, gridSize: 1 },
 	{ label: 'Médio', value: CharacterSizeEnum.MEDIUM, gridSize: 1 },
 	{ label: 'Grande', value: CharacterSizeEnum.LARGE, gridSize: 1 },
-	{ label: 'Gigante', value: CharacterSizeEnum.GIANT, gridSize: 4 },
-	{ label: 'Colossal', value: CharacterSizeEnum.COLOSSAL, gridSize: 9 },
+	{ label: 'Gigante', value: CharacterSizeEnum.GIANT, gridSize: 2 },
+	{ label: 'Colossal', value: CharacterSizeEnum.COLOSSAL, gridSize: 3 },
 ];
 
 const getCharacterSizeOption = (size: CharacterSizeEnum) => {

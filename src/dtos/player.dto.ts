@@ -18,4 +18,20 @@ export class PlayerDto extends CharacterDto {
 
 		return enemy;
 	}
+
+	public static colors() {
+		// Blue palette options with opacity 0.5
+		const colors = [
+			'rgba(37, 99, 235, 0.5)',   // blue-600
+			'rgba(59, 130, 246, 0.5)',  // blue-500
+			'rgba(96, 165, 250, 0.5)',  // blue-400
+			'rgba(29, 78, 216, 0.5)',   // blue-700
+			'rgba(30, 64, 175, 0.5)',   // blue-800
+		];
+		return colors[Math.floor(Math.random() * colors.length)];
+	}
+
+	public static borderColor() {
+		return 'rgb(37, 99, 235)'; // blue-600
+	}
 }
