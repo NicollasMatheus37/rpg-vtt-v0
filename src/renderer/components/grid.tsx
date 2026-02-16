@@ -7,6 +7,7 @@ export function Grid({
 	tileSize, 
 	gridW, 
 	gridH,
+	backgroundImageUrl,
 	selectedEntityIndex,
 	onEntitySelect,
 	contextMenu,
@@ -15,6 +16,7 @@ export function Grid({
 	tileSize: number,
 	gridW: number,
 	gridH: number,
+	backgroundImageUrl?: string | null,
 	selectedEntityIndex: number | null,
 	onEntitySelect: (index: number | null) => void,
 	contextMenu: { entityIndex: number; position: { x: number; y: number } } | null,
@@ -95,11 +97,25 @@ export function Grid({
 
 	const grid = (
 		<div style={{ position: 'relative', width: gridW * tileSize, height: gridH * tileSize }}>
+			{backgroundImageUrl && (
+				<div
+					className="absolute inset-0 z-0"
+					style={{
+						backgroundImage: `url(${backgroundImageUrl})`,
+						backgroundSize: 'cover',
+						backgroundPosition: 'center',
+						backgroundRepeat: 'no-repeat',
+						opacity: 0.75,
+					}}
+				/>
+			)}
+			<div className="relative z-[1]">
 			{Array.from({ length: gridH }).map((_, y) => (
 				<div key={y}>
 					{row(y)}
 				</div>
 			))}
+			</div>
 			{entityElements}
 		</div>
 	);

@@ -1,8 +1,10 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import { DrawerSidebar } from '../components/drawer-sidebar';
 import { CreateEnemyForm } from '../components/form/create-enemy.form';
-import { Grid } from '../components/grid';
 import { CreatePlayerForm } from '../components/form/create-player.form';
+import { SetGridBackgroundForm } from '../components/form/set-grid-background.form';
+import { SetGridSizeForm } from '../components/form/set-grid-size.form';
+import { Grid } from '../components/grid';
 import { EntitiesContext, EntitiesContextType, TEntity } from '../../contexts/entities.context';
 import { EnemyDto } from '../../dtos/enemy.dto';
 import { PlayerDto } from '../../dtos/player.dto';
@@ -18,9 +20,38 @@ export default function Map() {
 	} | null>(null);
 	const [enemyDrawerOpen, setEnemyDrawerOpen] = React.useState(false);
 	const [playerDrawerOpen, setPlayerDrawerOpen] = React.useState(false);
+	const [backgroundDrawerOpen, setBackgroundDrawerOpen] = React.useState(false);
+	const [gridSizeDrawerOpen, setGridSizeDrawerOpen] = React.useState(false);
+	const [backgroundImageUrl, setBackgroundImageUrl] = React.useState<string | null>(null);
+	const [gridWidth, setGridWidth] = React.useState(() => Math.floor(window.innerWidth / 64));
+	const [gridHeight, setGridHeight] = React.useState(() => Math.floor(window.innerHeight / 64));
 
-	const gridWidth = Math.floor(window.innerWidth / 64);
-	const gridHeight = Math.floor(window.innerHeight / 64);
+	useEffect(() => {
+		return () => {
+			if (backgroundImageUrl?.startsWith('blob:')) {
+				URL.revokeObjectURL(backgroundImageUrl);
+			}
+		};
+	}, [backgroundImageUrl]);
+
+	const handleSetBackground = useCallback((url: string) => {
+		setBackgroundImageUrl((prev) => {
+			if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev);
+			return url;
+		});
+	}, []);
+
+	const handleRemoveBackground = useCallback(() => {
+		setBackgroundImageUrl((prev) => {
+			if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev);
+			return null;
+		});
+	}, []);
+
+	const handleSetGridSize = useCallback((width: number, height: number) => {
+		setGridWidth(width);
+		setGridHeight(height);
+	}, []);
 
 	const zoomIn = () => {
 		setTileSize(prevSize => Math.min(prevSize + 16, 256));
@@ -108,6 +139,33 @@ export default function Map() {
 					>
 						<CreatePlayerForm onClose={() => setPlayerDrawerOpen(false)}/>
 					</DrawerSidebar>
+					<DrawerSidebar 
+						label="Background do Grid" 
+						id="set-background-drawer"
+						isOpen={backgroundDrawerOpen}
+						onOpen={() => setBackgroundDrawerOpen(true)}
+						onClose={() => setBackgroundDrawerOpen(false)}
+					>
+						<SetGridBackgroundForm
+							onSetBackground={handleSetBackground}
+							onRemoveBackground={handleRemoveBackground}
+							onClose={() => setBackgroundDrawerOpen(false)}
+						/>
+					</DrawerSidebar>
+					<DrawerSidebar 
+						label="Tamanho do Grid" 
+						id="set-grid-size-drawer"
+						isOpen={gridSizeDrawerOpen}
+						onOpen={() => setGridSizeDrawerOpen(true)}
+						onClose={() => setGridSizeDrawerOpen(false)}
+					>
+						<SetGridSizeForm
+							gridWidth={gridWidth}
+							gridHeight={gridHeight}
+							onSetSize={handleSetGridSize}
+							onClose={() => setGridSizeDrawerOpen(false)}
+						/>
+					</DrawerSidebar>
 				</div>
 				<div className={'fixed top-2 right-2 flex gap-2 z-40'}>
 					<button onClick={zoomIn} className={'btn'}>+ Zoom In</button>
@@ -117,6 +175,7 @@ export default function Map() {
 					tileSize={tileSize}
 					gridW={gridWidth}
 					gridH={gridHeight}
+					backgroundImageUrl={backgroundImageUrl}
 					selectedEntityIndex={selectedEntityIndex}
 					onEntitySelect={setSelectedEntityIndex}
 					contextMenu={contextMenu}
