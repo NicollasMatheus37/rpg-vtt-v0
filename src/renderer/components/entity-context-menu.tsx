@@ -153,6 +153,8 @@ const calculateNewEnemyPosition = (enemy: TEntity, target: PlayerEntityWithMeta)
 	return current;
 };
 
+type SubmenuMode = null | 'attack' | 'heal';
+
 export function EntityContextMenu({
 	entity,
 	entityIndex,
@@ -164,6 +166,7 @@ export function EntityContextMenu({
 	const entitiesContext = useContext(EntitiesContext);
 	const menuRef = useRef<HTMLDivElement | null>(null);
 	const [adjustedPosition, setAdjustedPosition] = useState(position);
+	const [submenu, setSubmenu] = useState<SubmenuMode>(null);
 
 	const viewportPadding = 8;
 
@@ -205,6 +208,45 @@ export function EntityContextMenu({
 
 	const handleSelect = () => {
 		onSelect(entityIndex);
+		onClose();
+	};
+
+	const rangeTiles = getRangeInTiles(entity);
+	const allEntities = entitiesContext.entities;
+
+	const enemiesInRange = useMemo(() => {
+		if (!isPlayer(entity)) return [];
+		return allEntities
+			.map((e, idx) => ({ entity: e, index: idx }))
+			.filter(({ entity: e }) => isEnemy(e))
+			.filter(({ entity: e }) => manhattanDistance(entity.position, e.position) <= rangeTiles);
+	}, [entity, allEntities, rangeTiles]);
+
+	const alliesInRange = useMemo(() => {
+		if (!isPlayer(entity)) return [];
+		return allEntities
+			.map((e, idx) => ({ entity: e, index: idx }))
+			.filter(({ entity: e }) => isPlayer(e))
+			.filter(({ entity: e }) => manhattanDistance(entity.position, e.position) <= rangeTiles);
+	}, [entity, allEntities, rangeTiles]);
+
+	const handleAttack = (targetIndex: number) => {
+		const target = entitiesContext.entities[targetIndex];
+		if (!target || !isEnemy(target)) return;
+		const damage = entity.character.rollDamage();
+		const newHp = Math.max(0, target.character.currentHp - damage);
+		entitiesContext.updateEntityHp(targetIndex, newHp);
+		setSubmenu(null);
+		onClose();
+	};
+
+	const handleHeal = (targetIndex: number) => {
+		const target = entitiesContext.entities[targetIndex];
+		if (!target || !isPlayer(target)) return;
+		const healing = entity.character.rollHealing();
+		const newHp = Math.min(target.character.hp, target.character.currentHp + healing);
+		entitiesContext.updateEntityHp(targetIndex, newHp);
+		setSubmenu(null);
 		onClose();
 	};
 
@@ -264,7 +306,6 @@ export function EntityContextMenu({
 				<div className="text-black text-xs px-4">
 					<p className='font-bold text-lg'>{entity.character.name}</p>
 					<p><span className="font-bold">HP</span>: {entity.character.hp} / {entity.character.currentHp}</p>
-					<p><span className="font-bold">Armadura</span>: {entity.character.armor}</p>
 					<p><span className="font-bold">Tipo</span>: {entity.character.type.charAt(0).toUpperCase() + entity.character.type.slice(1)}</p>
 					<p><span className="font-bold">Movimento</span>: {entity.character.movement}</p>
 					<p><span className="font-bold">Alcance</span>: {getCharacterRangeOption(entity.character.range)?.label}</p>
@@ -276,6 +317,74 @@ export function EntityContextMenu({
 				>
 					Select
 				</button>
+				{isPlayer(entity) && (
+					<>
+						{submenu === null && (
+							<>
+								<button
+									onClick={() => setSubmenu('attack')}
+									className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-gray-100"
+								>
+									Atacar {enemiesInRange.length > 0 ? `(${enemiesInRange.length} no alcance)` : ''}
+								</button>
+								{entity.character.type === CharacterTypeEnum.SUPPORT && (
+									<button
+										onClick={() => setSubmenu('heal')}
+										className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-gray-100"
+									>
+										Curar {alliesInRange.length > 0 ? `(${alliesInRange.length} no alcance)` : ''}
+									</button>
+								)}
+							</>
+						)}
+						{submenu === 'attack' && (
+							<>
+								<button
+									onClick={() => setSubmenu(null)}
+									className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-gray-100 text-gray-600"
+								>
+									← Voltar
+								</button>
+								{enemiesInRange.length === 0 ? (
+									<div className="px-4 py-2 text-sm text-gray-500">Nenhum inimigo no alcance</div>
+								) : (
+									enemiesInRange.map(({ entity: target, index: targetIndex }) => (
+										<button
+											key={targetIndex}
+											onClick={() => handleAttack(targetIndex)}
+											className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-red-50"
+										>
+											{target.character.name} (HP: {target.character.currentHp}/{target.character.hp})
+										</button>
+									))
+								)}
+							</>
+						)}
+						{submenu === 'heal' && (
+							<>
+								<button
+									onClick={() => setSubmenu(null)}
+									className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-gray-100 text-gray-600"
+								>
+									← Voltar
+								</button>
+								{alliesInRange.length === 0 ? (
+									<div className="px-4 py-2 text-sm text-gray-500">Nenhum aliado no alcance</div>
+								) : (
+									alliesInRange.map(({ entity: target, index: targetIndex }) => (
+										<button
+											key={targetIndex}
+											onClick={() => handleHeal(targetIndex)}
+											className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-green-50"
+										>
+											{target.character.name} (HP: {target.character.currentHp}/{target.character.hp})
+										</button>
+									))
+								)}
+							</>
+						)}
+					</>
+				)}
 				{isEnemy(entity) && (
 					<button
 						onClick={handleAutoMoveEnemy}

@@ -109,13 +109,25 @@ export default function Map() {
 		setEntities(prevEntities => prevEntities.filter((_, index) => index !== entityIndex));
 	}, []);
 
+	const updateEntityHp = useCallback((entityIndex: number, currentHp: number) => {
+		setEntities(prevEntities =>
+			prevEntities.map((entity, index) => {
+				if (index !== entityIndex) return entity;
+				const char = entity.character;
+				const updatedChar = Object.assign(Object.create(Object.getPrototypeOf(char)), char, { currentHp });
+				return { ...entity, character: updatedChar };
+			})
+		);
+	}, []);
+
 	const contextValue: EntitiesContextType = useMemo(() => ({
 		entities,
 		addEnemy,
 		addPlayer,
 		moveEntity,
 		deleteEntity,
-	}), [entities, addEnemy, addPlayer, moveEntity, deleteEntity]);
+		updateEntityHp,
+	}), [entities, addEnemy, addPlayer, moveEntity, deleteEntity, updateEntityHp]);
 
 	return (
 		<EntitiesContext value={contextValue}>

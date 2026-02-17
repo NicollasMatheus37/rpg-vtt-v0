@@ -89,7 +89,6 @@ export function Grid({
 				<div className={'text-xs'} style={{ color: entity.textColor }}>
 					<p className='font-bold text-lg'>{entity.character.name}</p>
 					<p>{entity.character.hp} / {entity.character.currentHp}</p>
-					<p><span className="font-bold">Armor</span>: {entity.character.armor}</p>
 				</div>
 			</div>
 		);

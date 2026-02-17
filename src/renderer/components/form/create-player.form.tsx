@@ -58,9 +58,6 @@ export function CreatePlayerForm({ onClose }: { onClose?: () => void }) {
 		if (!formState.hp || formState.hp <= 0) {
 			newErrors.hp = 'Vida deve ser maior que 0';
 		}
-		if (formState.armor === undefined || formState.armor < 0) {
-			newErrors.armor = 'Armadura é obrigatória';
-		}
 		if (!formState.movement) {
 			newErrors.movement = 'Movimento é obrigatório';
 		}
@@ -126,21 +123,6 @@ export function CreatePlayerForm({ onClose }: { onClose?: () => void }) {
 					onChange={handleInputChange}
 				/>
 				{errors.hp && <p className="text-error text-xs mt-1">{errors.hp}</p>}
-			</fieldset>
-
-			<fieldset className="fieldset">
-				<legend className="fieldset-legend">Armadura</legend>
-				<input 
-					type="number" 
-					name="armor" 
-					className={`input ${errors.armor ? 'input-error' : ''}`} 
-					placeholder="Armadura" 
-					min="0"
-					value={getFieldValue('armor')}
-					required
-					onChange={handleInputChange}
-				/>
-				{errors.armor && <p className="text-error text-xs mt-1">{errors.armor}</p>}
 			</fieldset>
 
 			<fieldset className="fieldset">

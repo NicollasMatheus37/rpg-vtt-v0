@@ -19,6 +19,7 @@ type EntitiesContextType = {
 	addPlayer: (player: PlayerDto) => void;
 	moveEntity: (entityIndex: number, newPosition: { x: number; y: number }) => void;
 	deleteEntity: (entityIndex: number) => void;
+	updateEntityHp: (entityIndex: number, currentHp: number) => void;
 };
 
 const EntitiesContext = createContext<EntitiesContextType>({
@@ -27,6 +28,7 @@ const EntitiesContext = createContext<EntitiesContextType>({
 	addPlayer: () => {},
 	moveEntity: () => {},
 	deleteEntity: () => {},
+	updateEntityHp: () => {},
 });
 
 export { EntitiesContext, EntitiesContextType, TEntity };

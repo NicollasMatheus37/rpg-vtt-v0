@@ -10,7 +10,6 @@ export class PlayerDto extends CharacterDto {
 		enemy.name = data.name;
 		enemy.currentHp = data.hp;
 		enemy.hp = data.hp;
-		enemy.armor = data.armor;
 		enemy.movement = data.movement;
 		enemy.size = data.size;
 		enemy.range = data.range;
