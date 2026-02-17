@@ -236,6 +236,13 @@ export function EntityContextMenu({
 		const damage = entity.character.rollDamage();
 		const newHp = Math.max(0, target.character.currentHp - damage);
 		entitiesContext.updateEntityHp(targetIndex, newHp);
+		entitiesContext.addLogEntry({
+			type: 'attack',
+			message: `${entity.character.name} atacou ${target.character.name} e causou ${damage} de dano.`,
+			actorName: entity.character.name,
+			targetName: target.character.name,
+			amount: damage,
+		});
 		setSubmenu(null);
 		onClose();
 	};
@@ -246,6 +253,13 @@ export function EntityContextMenu({
 		const healing = entity.character.rollHealing();
 		const newHp = Math.min(target.character.hp, target.character.currentHp + healing);
 		entitiesContext.updateEntityHp(targetIndex, newHp);
+		entitiesContext.addLogEntry({
+			type: 'heal',
+			message: `${entity.character.name} curou ${target.character.name} em ${healing} de vida.`,
+			actorName: entity.character.name,
+			targetName: target.character.name,
+			amount: healing,
+		});
 		setSubmenu(null);
 		onClose();
 	};

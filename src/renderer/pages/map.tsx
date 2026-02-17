@@ -5,14 +5,21 @@ import { CreatePlayerForm } from '../components/form/create-player.form';
 import { SetGridBackgroundForm } from '../components/form/set-grid-background.form';
 import { SetGridSizeForm } from '../components/form/set-grid-size.form';
 import { Grid } from '../components/grid';
+import { ActionLogPanel } from '../components/action-log-panel';
 import { EntitiesContext, EntitiesContextType, TEntity } from '../../contexts/entities.context';
 import { EnemyDto } from '../../dtos/enemy.dto';
 import { PlayerDto } from '../../dtos/player.dto';
 import { getCharacterSizeOption } from '../../enums/character-size.enum';
+import type { ActionLogEntry, ActionLogEntryInput } from '../../types/action-log.types';
+
+function generateId(): string {
+	return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
 export default function Map() {
 	const [tileSize, setTileSize] = React.useState(64);
 	const [entities, setEntities] = React.useState<TEntity[]>([]);
+	const [actionLog, setActionLog] = React.useState<ActionLogEntry[]>([]);
 	const [selectedEntityIndex, setSelectedEntityIndex] = React.useState<number | null>(null);
 	const [contextMenu, setContextMenu] = React.useState<{
 		entityIndex: number;
@@ -61,6 +68,14 @@ export default function Map() {
 		setTileSize(prevSize => Math.max(prevSize - 16, 16));
 	}
 
+	const addLogEntry = useCallback((input: ActionLogEntryInput) => {
+		setActionLog(prev => [...prev, {
+			...input,
+			id: generateId(),
+			timestamp: Date.now(),
+		}]);
+	}, []);
+
 	const addEnemy = useCallback((enemy: EnemyDto) => {
 		const size = getCharacterSizeOption(enemy.size).gridSize || 0;
 
@@ -76,7 +91,12 @@ export default function Map() {
 		}
 
 		setEntities(prevEntities => [...prevEntities, entity]);
-	}, [tileSize]);
+		addLogEntry({
+			type: 'create',
+			message: `Inimigo "${enemy.name}" foi criado.`,
+			actorName: enemy.name,
+		});
+	}, [tileSize, addLogEntry]);
 
 	const addPlayer = useCallback((player: PlayerDto) => {
 		const size = getCharacterSizeOption(player.size).gridSize || 0;
@@ -93,17 +113,31 @@ export default function Map() {
 		}
 
 		setEntities(prevEntities => [...prevEntities, entity]);
-	}, [tileSize]);
+		addLogEntry({
+			type: 'create',
+			message: `Jogador "${player.name}" foi criado.`,
+			actorName: player.name,
+		});
+	}, [tileSize, addLogEntry]);
 
 	const moveEntity = useCallback((entityIndex: number, newPosition: { x: number; y: number }) => {
-		setEntities(prevEntities => 
-			prevEntities.map((entity, index) => 
-				index === entityIndex 
-					? { ...entity, position: newPosition }
-					: entity
+		const entity = entities[entityIndex];
+		if (entity) {
+			const from = entity.position;
+			addLogEntry({
+				type: 'move',
+				message: `${entity.character.name} moveu de (${from.x}, ${from.y}) para (${newPosition.x}, ${newPosition.y}).`,
+				actorName: entity.character.name,
+				fromPosition: from,
+				toPosition: newPosition,
+			});
+		}
+		setEntities(prevEntities =>
+			prevEntities.map((e, index) =>
+				index === entityIndex ? { ...e, position: newPosition } : e
 			)
 		);
-	}, []);
+	}, [entities, addLogEntry]);
 
 	const deleteEntity = useCallback((entityIndex: number) => {
 		setEntities(prevEntities => prevEntities.filter((_, index) => index !== entityIndex));
@@ -122,12 +156,14 @@ export default function Map() {
 
 	const contextValue: EntitiesContextType = useMemo(() => ({
 		entities,
+		actionLog,
 		addEnemy,
 		addPlayer,
 		moveEntity,
 		deleteEntity,
 		updateEntityHp,
-	}), [entities, addEnemy, addPlayer, moveEntity, deleteEntity, updateEntityHp]);
+		addLogEntry,
+	}), [entities, actionLog, addEnemy, addPlayer, moveEntity, deleteEntity, updateEntityHp, addLogEntry]);
 
 	return (
 		<EntitiesContext value={contextValue}>
@@ -179,10 +215,11 @@ export default function Map() {
 						/>
 					</DrawerSidebar>
 				</div>
-				<div className={'fixed top-2 right-2 flex gap-2 z-40'}>
+				<div className={'fixed top-2 right-[19rem] flex gap-2 z-40'}>
 					<button onClick={zoomIn} className={'btn'}>+ Zoom In</button>
 					<button onClick={zoomOut} className={'btn'}>- Zoom Out</button>
 				</div>
+				<ActionLogPanel entries={actionLog} />
 				<Grid
 					tileSize={tileSize}
 					gridW={gridWidth}
