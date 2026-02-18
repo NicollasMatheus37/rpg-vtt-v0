@@ -22,7 +22,7 @@ function manhattanDistance(a: { x: number; y: number }, b: { x: number; y: numbe
 }
 
 export default function Map() {
-	const [tileSize, setTileSize] = React.useState(64);
+	const [tileSize] = React.useState(64);
 	const [entities, setEntities] = React.useState<TEntity[]>([]);
 	const [actionLog, setActionLog] = React.useState<ActionLogEntry[]>([]);
 	const [selectedEntityIndex, setSelectedEntityIndex] = React.useState<number | null>(null);
@@ -69,14 +69,6 @@ export default function Map() {
 		setGridWidth(width);
 		setGridHeight(height);
 	}, []);
-
-	const zoomIn = () => {
-		setTileSize(prevSize => Math.min(prevSize + 16, 256));
-	}
-
-	const zoomOut = () => {
-		setTileSize(prevSize => Math.max(prevSize - 16, 16));
-	}
 
 	const addLogEntry = useCallback((input: ActionLogEntryInput) => {
 		setActionLog(prev => [...prev, {
@@ -271,10 +263,6 @@ export default function Map() {
 							onClose={() => setGridSizeDrawerOpen(false)}
 						/>
 					</DrawerSidebar>
-				</div>
-				<div className={'fixed top-2 right-[19rem] flex gap-2 z-40'}>
-					<button onClick={zoomIn} className={'btn'}>+ Zoom In</button>
-					<button onClick={zoomOut} className={'btn'}>- Zoom Out</button>
 				</div>
 				<ActionLogPanel entries={actionLog} />
 				<div className="pr-72">

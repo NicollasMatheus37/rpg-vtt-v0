@@ -47,8 +47,15 @@ export function SetGridSizeForm({
 	};
 
 	const handleReset = () => {
-		const defaultW = Math.floor(window.innerWidth / 64);
-		const defaultH = Math.floor(window.innerHeight / 64);
+		const sidebarWidthPx = 300; // largura do painel de logs (w-72 = 18rem, 1rem = 16px)
+		const availableWidth = Math.max(window.innerWidth - sidebarWidthPx, 0);
+
+		const rawDefaultW = Math.floor(availableWidth / 64);
+		const rawDefaultH = Math.floor(window.innerHeight / 64);
+
+		const defaultW = Math.min(Math.max(rawDefaultW, MIN_SIZE), MAX_SIZE);
+		const defaultH = Math.min(Math.max(rawDefaultH, MIN_SIZE), MAX_SIZE);
+
 		setWidth(String(defaultW));
 		setHeight(String(defaultH));
 		setErrors({});
