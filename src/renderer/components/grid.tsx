@@ -11,6 +11,8 @@ export function Grid({
 	backgroundImageUrl,
 	selectedEntityIndex,
 	onEntitySelect,
+	relocationEntityIndex,
+	onRelocationSelect,
 	contextMenu,
 	onContextMenu,
 }: {
@@ -20,24 +22,65 @@ export function Grid({
 	backgroundImageUrl?: string | null,
 	selectedEntityIndex: number | null,
 	onEntitySelect: (index: number | null) => void,
+	relocationEntityIndex: number | null,
+	onRelocationSelect: (index: number | null) => void,
 	contextMenu: { entityIndex: number; position: { x: number; y: number } } | null,
 	onContextMenu: (menu: { entityIndex: number; position: { x: number; y: number } } | null) => void,
 }) {
 	const entitiesContext = React.useContext(EntitiesContext);
+	const entities = entitiesContext.entities;
+
+	const isTileSelectable = (x: number, y: number): boolean => {
+		// Modo de realocação: qualquer casa é válida e destacada.
+		if (relocationEntityIndex !== null) {
+			return true;
+		}
+
+		// Movimento de ação: só destaca casas dentro do alcance de movimento.
+		if (selectedEntityIndex !== null) {
+			const entity = entities[selectedEntityIndex];
+			if (!entity) return false;
+
+			const movement = entity.character.movement ?? 0;
+			const dx = Math.abs(entity.position.x - x);
+			const dy = Math.abs(entity.position.y - y);
+			return dx + dy <= movement;
+		}
+
+		return false;
+	};
 
 	const handleTileClick = (x: number, y: number) => {
 		if (contextMenu) {
 			onContextMenu(null); // Close context menu
 			return;
 		}
+
+		if (relocationEntityIndex !== null) {
+			// Movimento de realocação (sem log, sem limite de alcance).
+			entitiesContext.moveEntity(
+				relocationEntityIndex,
+				{ x, y },
+				{ mode: 'relocation' },
+			);
+			onRelocationSelect(null);
+			return;
+		}
+
 		if (selectedEntityIndex !== null) {
-			entitiesContext.moveEntity(selectedEntityIndex, { x, y });
+			// Movimento de ação (com log e respeitando o movimento do personagem).
+			entitiesContext.moveEntity(
+				selectedEntityIndex,
+				{ x, y },
+				{ mode: 'action' },
+			);
 			onEntitySelect(null); // Deselect after moving
 		}
 	};
 
 	const handleEntityClick = (e: React.MouseEvent, index: number) => {
 		e.stopPropagation(); // Prevent tile click when clicking entity
+		onRelocationSelect(null); // sair de modo de realocação, se estiver ativo
 		onEntitySelect(index === selectedEntityIndex ? null : index);
 	};
 
@@ -58,14 +101,13 @@ export function Grid({
 					tileSize={tileSize}
 					x={x}
 					y={y}
-					isSelectable={selectedEntityIndex !== null}
+					isSelectable={isTileSelectable(x, y)}
 					onClick={handleTileClick}
 				/>
 			))}
 		</div>
 	);
 
-	const entities = entitiesContext.entities;
 	const entityElements = entities?.map((entity: TEntity, index: number) => {
 		if (!entity.position) return null;
 
@@ -173,6 +215,7 @@ export function Grid({
 					onClose={() => onContextMenu(null)}
 					onDelete={entitiesContext.deleteEntity}
 					onSelect={onEntitySelect}
+					onRelocate={onRelocationSelect}
 				/>
 			)}
 		</div>

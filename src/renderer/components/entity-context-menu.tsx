@@ -13,6 +13,7 @@ type EntityContextMenuProps = {
 	onClose: () => void;
 	onDelete: (index: number) => void;
 	onSelect: (index: number) => void;
+	onRelocate: (index: number) => void;
 };
 
 type PlayerEntityWithMeta = {
@@ -168,6 +169,7 @@ export function EntityContextMenu({
 	onClose,
 	onDelete,
 	onSelect,
+	onRelocate,
 }: EntityContextMenuProps) {
 	const entitiesContext = useContext(EntitiesContext);
 	const menuRef = useRef<HTMLDivElement | null>(null);
@@ -214,6 +216,11 @@ export function EntityContextMenu({
 
 	const handleSelect = () => {
 		onSelect(entityIndex);
+		onClose();
+	};
+
+	const handleRelocate = () => {
+		onRelocate(entityIndex);
 		onClose();
 	};
 
@@ -307,7 +314,7 @@ export function EntityContextMenu({
 			// Caso contrário, sempre tenta ir em direção ao player0.
 			const targetForMovement = pickAutoMoveTarget(entity, alivePlayerEntities);
 			newPosition = calculateNewEnemyPosition(entity, targetForMovement);
-			entitiesContext.moveEntity(entityIndex, newPosition, { isAutomatic: true });
+			entitiesContext.moveEntity(entityIndex, newPosition, { isAutomatic: true, mode: 'action' });
 		}
 
 		// Após o movimento (ou parada), tenta atacar o player0 se estiver em alcance.
@@ -361,6 +368,12 @@ export function EntityContextMenu({
 					className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-gray-100"
 				>
 					Select
+				</button>
+				<button
+					onClick={handleRelocate}
+					className="w-full px-4 py-2 text-left bg-transparent border-none cursor-pointer text-sm hover:bg-gray-100"
+				>
+					Realocar (modo livre)
 				</button>
 				{isPlayer(entity) && (
 					<>

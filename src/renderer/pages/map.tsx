@@ -17,11 +17,16 @@ function generateId(): string {
 	return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function manhattanDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
+	return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+}
+
 export default function Map() {
 	const [tileSize, setTileSize] = React.useState(64);
 	const [entities, setEntities] = React.useState<TEntity[]>([]);
 	const [actionLog, setActionLog] = React.useState<ActionLogEntry[]>([]);
 	const [selectedEntityIndex, setSelectedEntityIndex] = React.useState<number | null>(null);
+	const [relocationEntityIndex, setRelocationEntityIndex] = React.useState<number | null>(null);
 	const [contextMenu, setContextMenu] = React.useState<{
 		entityIndex: number;
 		position: { x: number; y: number };
@@ -128,11 +133,25 @@ export default function Map() {
 	const moveEntity = useCallback((
 		entityIndex: number,
 		newPosition: { x: number; y: number },
-		options?: { isAutomatic?: boolean }
+		options?: { isAutomatic?: boolean; mode?: 'relocation' | 'action' }
 	) => {
 		const entity = entities[entityIndex];
-		if (entity) {
-			const from = entity.position;
+		if (!entity) {
+			return;
+		}
+
+		const from = entity.position;
+		const mode = options?.mode ?? 'action';
+
+		if (mode === 'action') {
+			const movement = entity.character.movement ?? 0;
+			const distance = manhattanDistance(from, newPosition);
+
+			// Movimento de ação só é permitido dentro do movimento do personagem.
+			if (distance > movement) {
+				return;
+			}
+
 			const isAutomatic = options?.isAutomatic === true;
 			addLogEntry({
 				type: 'move',
@@ -144,6 +163,18 @@ export default function Map() {
 				toPosition: newPosition,
 			});
 		}
+
+		// Movimento de realocação: sem log e sem restrição de alcance.
+		if (mode === 'relocation') {
+			setEntities(prevEntities =>
+				prevEntities.map((e, index) =>
+					index === entityIndex ? { ...e, position: newPosition } : e
+				)
+			);
+			return;
+		}
+
+		// Movimento de ação já validado acima: aplica a nova posição.
 		setEntities(prevEntities =>
 			prevEntities.map((e, index) =>
 				index === entityIndex ? { ...e, position: newPosition } : e
@@ -253,7 +284,15 @@ export default function Map() {
 						gridH={gridHeight}
 						backgroundImageUrl={backgroundImageUrl}
 						selectedEntityIndex={selectedEntityIndex}
-						onEntitySelect={setSelectedEntityIndex}
+						onEntitySelect={(index) => {
+							setRelocationEntityIndex(null);
+							setSelectedEntityIndex(index);
+						}}
+						relocationEntityIndex={relocationEntityIndex}
+						onRelocationSelect={(index) => {
+							setSelectedEntityIndex(null);
+							setRelocationEntityIndex(index);
+						}}
 						contextMenu={contextMenu}
 						onContextMenu={setContextMenu}
 					/>

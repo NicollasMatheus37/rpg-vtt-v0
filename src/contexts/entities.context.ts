@@ -14,6 +14,17 @@ type TEntity = {
 	type: typeof EnemyDto | typeof PlayerDto;
 };
 
+export type MoveEntityOptions = {
+	/** Movimento automático (ex.: IA do inimigo). */
+	isAutomatic?: boolean;
+	/**
+	 * Tipo de movimento:
+	 * - 'relocation': realocação livre (sem log, sem restrição de distância)
+	 * - 'action': movimento de ação (gera log e respeita o movimento da ficha)
+	 */
+	mode?: 'relocation' | 'action';
+};
+
 type EntitiesContextType = {
 	entities: TEntity[];
 	actionLog: ActionLogEntry[];
@@ -22,7 +33,7 @@ type EntitiesContextType = {
 	moveEntity: (
 		entityIndex: number,
 		newPosition: { x: number; y: number },
-		options?: { isAutomatic?: boolean }
+		options?: MoveEntityOptions
 	) => void;
 	deleteEntity: (entityIndex: number) => void;
 	updateEntityHp: (entityIndex: number, currentHp: number) => void;
