@@ -10,6 +10,7 @@ import { EntitiesContext, EntitiesContextType, TEntity } from '../../contexts/en
 import { EnemyDto } from '../../dtos/enemy.dto';
 import { PlayerDto } from '../../dtos/player.dto';
 import { getCharacterSizeOption } from '../../enums/character-size.enum';
+import { CharacterStatusEnum } from '../../enums/character-status.enum';
 import type { ActionLogEntry, ActionLogEntryInput } from '../../types/action-log.types';
 
 function generateId(): string {
@@ -30,7 +31,11 @@ export default function Map() {
 	const [backgroundDrawerOpen, setBackgroundDrawerOpen] = React.useState(false);
 	const [gridSizeDrawerOpen, setGridSizeDrawerOpen] = React.useState(false);
 	const [backgroundImageUrl, setBackgroundImageUrl] = React.useState<string | null>(null);
-	const [gridWidth, setGridWidth] = React.useState(() => Math.floor(window.innerWidth / 64));
+	const [gridWidth, setGridWidth] = React.useState(() => {
+		const sidebarWidthPx = 300; // largura do painel de logs (w-72 = 18rem, 1rem = 16px)
+		const availableWidth = Math.max(window.innerWidth - sidebarWidthPx, 0);
+		return Math.max(Math.floor(availableWidth / 64), 0);
+	});
 	const [gridHeight, setGridHeight] = React.useState(() => Math.floor(window.innerHeight / 64));
 
 	useEffect(() => {
@@ -120,13 +125,20 @@ export default function Map() {
 		});
 	}, [tileSize, addLogEntry]);
 
-	const moveEntity = useCallback((entityIndex: number, newPosition: { x: number; y: number }) => {
+	const moveEntity = useCallback((
+		entityIndex: number,
+		newPosition: { x: number; y: number },
+		options?: { isAutomatic?: boolean }
+	) => {
 		const entity = entities[entityIndex];
 		if (entity) {
 			const from = entity.position;
+			const isAutomatic = options?.isAutomatic === true;
 			addLogEntry({
 				type: 'move',
-				message: `${entity.character.name} moveu de (${from.x}, ${from.y}) para (${newPosition.x}, ${newPosition.y}).`,
+				message: isAutomatic
+					? `${entity.character.name} moveu automaticamente de (${from.x}, ${from.y}) para (${newPosition.x}, ${newPosition.y}).`
+					: `${entity.character.name} moveu de (${from.x}, ${from.y}) para (${newPosition.x}, ${newPosition.y}).`,
 				actorName: entity.character.name,
 				fromPosition: from,
 				toPosition: newPosition,
@@ -144,15 +156,29 @@ export default function Map() {
 	}, []);
 
 	const updateEntityHp = useCallback((entityIndex: number, currentHp: number) => {
+		const entity = entities[entityIndex];
+		if (entity) {
+			const wasDead = entity.character.status === CharacterStatusEnum.DEAD;
+			const willBeDead = currentHp <= 0;
+			if (!wasDead && willBeDead) {
+				addLogEntry({
+					type: 'death',
+					message: `${entity.character.name} morreu.`,
+					actorName: entity.character.name,
+				});
+			}
+		}
+
 		setEntities(prevEntities =>
 			prevEntities.map((entity, index) => {
 				if (index !== entityIndex) return entity;
 				const char = entity.character;
-				const updatedChar = Object.assign(Object.create(Object.getPrototypeOf(char)), char, { currentHp });
+				const status = currentHp <= 0 ? CharacterStatusEnum.DEAD : CharacterStatusEnum.ALIVE;
+				const updatedChar = Object.assign(Object.create(Object.getPrototypeOf(char)), char, { currentHp, status });
 				return { ...entity, character: updatedChar };
 			})
 		);
-	}, []);
+	}, [entities, addLogEntry]);
 
 	const contextValue: EntitiesContextType = useMemo(() => ({
 		entities,
@@ -220,16 +246,18 @@ export default function Map() {
 					<button onClick={zoomOut} className={'btn'}>- Zoom Out</button>
 				</div>
 				<ActionLogPanel entries={actionLog} />
-				<Grid
-					tileSize={tileSize}
-					gridW={gridWidth}
-					gridH={gridHeight}
-					backgroundImageUrl={backgroundImageUrl}
-					selectedEntityIndex={selectedEntityIndex}
-					onEntitySelect={setSelectedEntityIndex}
-					contextMenu={contextMenu}
-					onContextMenu={setContextMenu}
-				/>
+				<div className="pr-72">
+					<Grid
+						tileSize={tileSize}
+						gridW={gridWidth}
+						gridH={gridHeight}
+						backgroundImageUrl={backgroundImageUrl}
+						selectedEntityIndex={selectedEntityIndex}
+						onEntitySelect={setSelectedEntityIndex}
+						contextMenu={contextMenu}
+						onContextMenu={setContextMenu}
+					/>
+				</div>
 			</div>
 		</EntitiesContext>
 	);

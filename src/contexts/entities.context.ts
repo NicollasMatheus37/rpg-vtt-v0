@@ -19,7 +19,11 @@ type EntitiesContextType = {
 	actionLog: ActionLogEntry[];
 	addEnemy: (enemy: EnemyDto) => void;
 	addPlayer: (player: PlayerDto) => void;
-	moveEntity: (entityIndex: number, newPosition: { x: number; y: number }) => void;
+	moveEntity: (
+		entityIndex: number,
+		newPosition: { x: number; y: number },
+		options?: { isAutomatic?: boolean }
+	) => void;
 	deleteEntity: (entityIndex: number) => void;
 	updateEntityHp: (entityIndex: number, currentHp: number) => void;
 	addLogEntry: (input: ActionLogEntryInput) => void;

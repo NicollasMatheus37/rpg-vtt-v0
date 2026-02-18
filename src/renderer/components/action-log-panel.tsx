@@ -11,6 +11,7 @@ const typeStyles: Record<ActionLogType, string> = {
 	move: 'text-amber-600',
 	attack: 'text-red-600',
 	heal: 'text-emerald-600',
+	death: 'text-stone-400',
 };
 
 const typeLabels: Record<ActionLogType, string> = {
@@ -18,6 +19,7 @@ const typeLabels: Record<ActionLogType, string> = {
 	move: 'Movimento',
 	attack: 'Ataque',
 	heal: 'Cura',
+	death: 'Morte',
 };
 
 function formatTime(ts: number): string {
@@ -30,7 +32,7 @@ export function ActionLogPanel({ entries, maxEntries = 100 }: ActionLogPanelProp
 
 	return (
 		<div
-			className="fixed top-12 right-0 bottom-0 w-72 z-30 flex flex-col bg-stone-900/95 border-l border-stone-700 shadow-xl"
+			className="fixed top-0 right-0 bottom-0 w-72 z-30 flex flex-col bg-stone-900 border-l border-stone-700 shadow-xl"
 			aria-label="Log de ações"
 		>
 			<div className="shrink-0 px-3 py-2 border-b border-stone-700">

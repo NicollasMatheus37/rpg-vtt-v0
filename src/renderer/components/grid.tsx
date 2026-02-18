@@ -1,5 +1,6 @@
 import React from 'react';
 import { EntitiesContext, TEntity } from '../../contexts/entities.context';
+import { CharacterStatusEnum } from '../../enums/character-status.enum';
 import { EntityContextMenu } from './entity-context-menu';
 import { Tile } from './tile';
 
@@ -70,6 +71,7 @@ export function Grid({
 
 		const entitySize = entity.size;
 		const isSelected = index === selectedEntityIndex;
+		const isDead = entity.character.status === CharacterStatusEnum.DEAD;
 
 		return (
 			<div
@@ -86,7 +88,44 @@ export function Grid({
 					border: isSelected ? '3px solid yellow' : `2px solid ${entity.borderColor}`,
 				}}
 			>
-				<div className={'text-xs'} style={{ color: entity.textColor }}>
+				{isDead && (
+					<>
+						{/* Darken only the token background, not the text */}
+						<div
+							className="absolute inset-0"
+							style={{
+								pointerEvents: 'none',
+								backgroundColor: 'rgba(0, 0, 0, 0.25)',
+								zIndex: 0,
+							}}
+						/>
+						{/* Draw an "X" per tile */}
+						<div
+							className="absolute inset-0"
+							style={{
+								pointerEvents: 'none',
+								backgroundImage: `
+									linear-gradient(45deg,
+										transparent calc(50% - 1px),
+										rgba(0, 0, 0, 0.45) calc(50% - 1px),
+										rgba(0, 0, 0, 0.45) calc(50% + 1px),
+										transparent calc(50% + 1px)
+									),
+									linear-gradient(-45deg,
+										transparent calc(50% - 1px),
+										rgba(0, 0, 0, 0.45) calc(50% - 1px),
+										rgba(0, 0, 0, 0.45) calc(50% + 1px),
+										transparent calc(50% + 1px)
+									)
+								`,
+								backgroundSize: `${tileSize}px ${tileSize}px`,
+								backgroundRepeat: 'repeat',
+								zIndex: 1,
+							}}
+						/>
+					</>
+				)}
+				<div className={'text-xs'} style={{ color: entity.textColor, position: 'relative', zIndex: 2 }}>
 					<p className='font-bold text-lg'>{entity.character.name}</p>
 					<p>{entity.character.hp} / {entity.character.currentHp}</p>
 				</div>

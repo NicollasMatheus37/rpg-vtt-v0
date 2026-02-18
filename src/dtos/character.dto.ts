@@ -1,6 +1,7 @@
 import { CharacterTypeEnum } from '../enums/character-type.enum';
 import { CharacterRangeEnum } from '../enums/character-range.enum';
 import { CharacterSizeEnum } from '../enums/character-size.enum';
+import { CharacterStatusEnum } from '../enums/character-status.enum';
 
 /** Lança 1 dado de `sides` lados (1dX). */
 function rollD(sides: number): number {
@@ -10,6 +11,7 @@ function rollD(sides: number): number {
 export class CharacterDto {
 	id: string;
 	name: string;
+	status: CharacterStatusEnum;
 	currentHp: number;
 	hp: number;
 	movement: 6 | 9 | 12;

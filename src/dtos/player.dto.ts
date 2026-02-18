@@ -1,6 +1,7 @@
 import { CharacterDto } from './character.dto';
 import { CharacterTypeEnum } from '../enums/character-type.enum';
 import { uuid } from '../utils';
+import { CharacterStatusEnum } from '../enums/character-status.enum';
 
 export class PlayerDto extends CharacterDto {
 	public create(data: Partial<PlayerDto>): PlayerDto {
@@ -10,6 +11,7 @@ export class PlayerDto extends CharacterDto {
 		enemy.name = data.name;
 		enemy.currentHp = data.hp;
 		enemy.hp = data.hp;
+		enemy.status = (data.hp ?? 0) > 0 ? CharacterStatusEnum.ALIVE : CharacterStatusEnum.DEAD;
 		enemy.movement = data.movement;
 		enemy.size = data.size;
 		enemy.range = data.range;

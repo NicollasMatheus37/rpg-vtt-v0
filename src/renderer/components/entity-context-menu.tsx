@@ -4,6 +4,7 @@ import { getCharacterRangeOption } from '../../enums/character-range.enum';
 import { EnemyDto } from '../../dtos/enemy.dto';
 import { PlayerDto } from '../../dtos/player.dto';
 import { CharacterTypeEnum } from '../../enums/character-type.enum';
+import { CharacterStatusEnum } from '../../enums/character-status.enum';
 
 type EntityContextMenuProps = {
 	entity: TEntity;
@@ -36,27 +37,32 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 const getPriorityBucket = (player: PlayerEntityWithMeta, minHp: number): number => {
 	const { character } = player.entity;
 
-	// Prioridade 0: player mais vulnerável (menor HP atual)
+	// Dead characters: lowest priority, should not be targeted.
+	if (character.status === CharacterStatusEnum.DEAD) {
+		return 999;
+	}
+
+	// Priority 0: most vulnerable (lowest current HP)
 	if (character.currentHp === minHp) {
 		return 0;
 	}
 
-	// Prioridade 1: suporte
+	// Priority 1: support
 	if (character.type === CharacterTypeEnum.SUPPORT) {
 		return 1;
 	}
 
-	// Prioridade 2: dano
+	// Priority 2: damage
 	if (character.type === CharacterTypeEnum.DAMAGE) {
 		return 2;
 	}
 
-	// Prioridade 3: tanque
+	// Priority 3: tank
 	if (character.type === CharacterTypeEnum.TANK) {
 		return 3;
 	}
 
-	// Qualquer outro tipo inesperado cai na menor prioridade
+	// Any unexpected type falls back to lowest normal priority.
 	return 4;
 };
 
@@ -219,6 +225,8 @@ export function EntityContextMenu({
 		return allEntities
 			.map((e, idx) => ({ entity: e, index: idx }))
 			.filter(({ entity: e }) => isEnemy(e))
+			// Do not attack dead enemies
+			.filter(({ entity: e }) => e.character.status !== CharacterStatusEnum.DEAD)
 			.filter(({ entity: e }) => manhattanDistance(entity.position, e.position) <= rangeTiles);
 	}, [entity, allEntities, rangeTiles]);
 
@@ -233,6 +241,7 @@ export function EntityContextMenu({
 	const handleAttack = (targetIndex: number) => {
 		const target = entitiesContext.entities[targetIndex];
 		if (!target || !isEnemy(target)) return;
+		if (target.character.status === CharacterStatusEnum.DEAD) return;
 		const damage = entity.character.rollDamage();
 		const newHp = Math.max(0, target.character.currentHp - damage);
 		entitiesContext.updateEntityHp(targetIndex, newHp);
@@ -274,29 +283,51 @@ export function EntityContextMenu({
 			.map((e, idx) => ({ entity: e, index: idx }))
 			.filter(p => isPlayer(p.entity));
 
-		if (!playerEntities.length) {
+		// Consider only alive players for targeting/priority.
+		const alivePlayerEntities = playerEntities.filter(
+			p => p.entity.character.status !== CharacterStatusEnum.DEAD
+		);
+
+		if (!alivePlayerEntities.length) {
 			return;
 		}
 
 		// Sempre recalcula o player0 a cada clique.
-		const player0 = getPlayer0(entity, playerEntities);
+		const player0 = getPlayer0(entity, alivePlayerEntities);
 		if (!player0) return;
 
 		const rangeTiles = getRangeInTiles(entity);
 		const distanceToPlayer0 = manhattanDistance(entity.position, player0.entity.position);
 
-		// Se já está "de frente" ao player0 (em alcance), não se move.
-		if (distanceToPlayer0 <= rangeTiles) {
-			onClose();
-			return;
+		// Calcula nova posição (pode ser a mesma, se já estiver em alcance).
+		let newPosition = entity.position;
+
+		if (distanceToPlayer0 > rangeTiles) {
+			// Se ninguém é alcançável neste turno (movimento + alcance), move para o player mais próximo.
+			// Caso contrário, sempre tenta ir em direção ao player0.
+			const targetForMovement = pickAutoMoveTarget(entity, alivePlayerEntities);
+			newPosition = calculateNewEnemyPosition(entity, targetForMovement);
+			entitiesContext.moveEntity(entityIndex, newPosition, { isAutomatic: true });
 		}
 
-		// Se ninguém é alcançável neste turno (movimento + alcance), move para o player mais próximo.
-		// Caso contrário, sempre tenta ir em direção ao player0.
-		const targetForMovement = pickAutoMoveTarget(entity, playerEntities);
-		const newPosition = calculateNewEnemyPosition(entity, targetForMovement);
+		// Após o movimento (ou parada), tenta atacar o player0 se estiver em alcance.
+		const enemyAfterMove: TEntity = { ...entity, position: newPosition };
+		const rangeAfterMove = getRangeInTiles(enemyAfterMove);
+		const distanceAfterMoveToPlayer0 = manhattanDistance(newPosition, player0.entity.position);
 
-		entitiesContext.moveEntity(entityIndex, newPosition);
+		if (distanceAfterMoveToPlayer0 <= rangeAfterMove) {
+			const damage = enemyAfterMove.character.rollDamage();
+			const newHp = Math.max(0, player0.entity.character.currentHp - damage);
+			entitiesContext.updateEntityHp(player0.index, newHp);
+			entitiesContext.addLogEntry({
+				type: 'attack',
+				message: `${enemyAfterMove.character.name} atacou ${player0.entity.character.name} e causou ${damage} de dano.`,
+				actorName: enemyAfterMove.character.name,
+				targetName: player0.entity.character.name,
+				amount: damage,
+			});
+		}
+
 		onClose();
 	};
 

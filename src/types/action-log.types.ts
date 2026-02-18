@@ -1,4 +1,4 @@
-export type ActionLogType = 'create' | 'move' | 'attack' | 'heal';
+export type ActionLogType = 'create' | 'move' | 'attack' | 'heal' | 'death';
 
 export type ActionLogEntry = {
 	id: string;
