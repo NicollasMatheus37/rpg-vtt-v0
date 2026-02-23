@@ -78,6 +78,61 @@ export default function Map() {
 		}]);
 	}, []);
 
+	const handleSaveGrid = useCallback(async () => {
+		if (!window.electronAPI?.saveCurrentGrid) {
+			console.warn('API de salvar grid não disponível');
+			return;
+		}
+
+		const snapshot = {
+			grid: {
+				width: gridWidth,
+				height: gridHeight,
+				tileSize,
+				backgroundImageUrl,
+				name: null as string | null,
+			},
+			characters: entities.map((entity: TEntity) => ({
+				id: entity.character.id,
+				name: entity.character.name,
+				status: entity.character.status,
+				currentHp: entity.character.currentHp,
+				hp: entity.character.hp,
+				movement: entity.character.movement ?? null,
+				size: entity.character.size,
+				range: entity.character.range,
+				type: entity.character.type,
+				kind: entity.type === PlayerDto ? 'player' as const : 'enemy' as const,
+				position: { ...entity.position },
+				color: entity.color,
+				borderColor: entity.borderColor,
+				textColor: entity.textColor,
+			})),
+			logs: actionLog.map((entry: ActionLogEntry) => ({
+				id: entry.id,
+				timestamp: entry.timestamp,
+				type: entry.type,
+				message: entry.message,
+				actorName: entry.actorName,
+				targetName: entry.targetName,
+				amount: entry.amount,
+				fromPosition: entry.fromPosition,
+				toPosition: entry.toPosition,
+			})),
+		};
+
+		try {
+			const { gridId } = await window.electronAPI.saveCurrentGrid(snapshot);
+			// Feedback simples por enquanto.
+			// eslint-disable-next-line no-alert
+			alert(`Grid salvo com sucesso (id: ${gridId}).`);
+		} catch (error) {
+			console.error('Erro ao salvar grid:', error);
+			// eslint-disable-next-line no-alert
+			alert('Erro ao salvar o grid. Verifique o console para mais detalhes.');
+		}
+	}, [gridWidth, gridHeight, tileSize, backgroundImageUrl, entities, actionLog]);
+
 	const addEnemy = useCallback((enemy: EnemyDto) => {
 		const size = getCharacterSizeOption(enemy.size).gridSize || 0;
 
@@ -263,6 +318,13 @@ export default function Map() {
 							onClose={() => setGridSizeDrawerOpen(false)}
 						/>
 					</DrawerSidebar>
+					<button
+						type="button"
+						className="btn btn-success"
+						onClick={handleSaveGrid}
+					>
+						Salvar grid
+					</button>
 				</div>
 				<ActionLogPanel entries={actionLog} />
 				<div className="pr-72">
