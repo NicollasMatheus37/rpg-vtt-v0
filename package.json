@@ -9,7 +9,8 @@
     "build:renderer": "vite build",
     "build": "npm run build:renderer && npm run build:main",
     "start": "npm run build && electron .",
-    "dev": "concurrently \"vite\" \"tsc -w\" \"electron .\""
+    "dev": "concurrently \"vite\" \"tsc -w\" \"electron .\"",
+    "dist": "npm run build && electron-builder"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
@@ -22,6 +23,7 @@
     "cpx": "^1.5.0",
     "daisyui": "^5.5.0",
     "electron": "^39.1.2",
+    "electron-builder": "^26.8.1",
     "typescript": "^5.6.3",
     "vite": "^7.2.2"
   },
@@ -33,5 +35,20 @@
     "react-konva": "^19.2.0",
     "tailwindcss": "^4.1.17",
     "uuid": "^13.0.0"
+  },
+  "build": {
+    "appId": "com.rpg.vtt",
+    "productName": "RPG VTT",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   }
 }
