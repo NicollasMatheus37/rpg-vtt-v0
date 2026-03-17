@@ -13,7 +13,6 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
-    "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
@@ -28,7 +27,6 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
-    "better-sqlite3": "^11.7.0",
     "konva": "^10.0.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
